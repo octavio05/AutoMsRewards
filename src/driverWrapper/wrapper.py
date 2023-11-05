@@ -32,13 +32,21 @@ class Wrapper:
     def click(self):
         self.driver.click()
 
-    def tryClick(self):
-        try:
-            self.driver.click()
-        except ElementNotInteractableException:
-            return False
+    def tryClick(self, attempts = 1):
+        doClick = False
+        tryClick = 0
+
+        while (not doClick and tryClick < attempts):
+            try:
+                self.driver.click()
+            except ElementNotInteractableException:
+                doClick = False
+            else:
+                doClick = True
+            finally:
+                tryClick += 1
         
-        return True
+        return doClick
     
     def sendKeys(self, text:str):
         self.driver.send_keys(text)
