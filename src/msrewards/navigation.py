@@ -3,19 +3,22 @@ import random
 import constants
 
 class Navigation:
-    def __init__(self, driverWrapper):
+    def __init__(self, driverWrapper, username:str, password:str):
         if (driverWrapper is None):
             raise ValueError("driver must be provided")
         
+        self.username = username
+        self.password = password
         self.driverWrapper = driverWrapper
         self.tabBase = driverWrapper.driver.current_window_handle
 
-    def login(self, username:str, password:str):
+    def start(self):
         self.driverWrapper.driver.get(constants.REWARDS_URL)
 
+    def login(self):
         exists, loginInput = self.driverWrapper.tryFindElement(constants.LOGIN_INPUT_CSS_SELECTOR)
         if (exists):
-            loginInput.sendKeys(username)
+            loginInput.sendKeys(self.username)
         else:
             print("already loged in")
             return
@@ -26,7 +29,7 @@ class Navigation:
         sleep(1)
 
         passwordInput = self.driverWrapper.findElement(constants.PASSWORD_INPUT_CSS_SELECTOR)
-        passwordInput.sendKeys(password)
+        passwordInput.sendKeys(self.password)
 
         sleep(2)
 
@@ -36,6 +39,18 @@ class Navigation:
         noSaveSessionButton = self.driverWrapper.findElement(constants.NO_SAVE_SESSION_BUTTON_CSS_SELECTOR)
         noSaveSessionButton.click()   
         
+    def _tryInternalLogin(self):
+        exists, loginButton = self.driverWrapper.tryFindElement('.signInOptions .identityOption a')
+
+        if (not exists):
+            return
+        
+        sleep(constants.PREVENT_WAIT_SECONDS)
+        
+        loginButton.click()
+
+        self.login()
+
     def checkCards(self):
         uncheckedCards = self._getUncheckedCards()
         if (not uncheckedCards):
@@ -43,7 +58,7 @@ class Navigation:
         
         for card in uncheckedCards:
             card.click()
-            sleep(1)
+            sleep(constants.PREVENT_WAIT_SECONDS)
             newTabId = self._tryGetNewTabId()
 
             if (self._isTestCard(card)):
@@ -58,6 +73,7 @@ class Navigation:
                 self._resolveFastTest()                
 
             self._closeTab(newTabId)
+            sleep(constants.PREVENT_WAIT_SECONDS)
 
     def _closeAcceptCookieModal(self):
         exists, rejectCookieButton = self.driverWrapper.tryFindElement(constants.REJECT_COOKIE_BUTTON_CSS_SELECTOR)
@@ -66,11 +82,14 @@ class Navigation:
             rejectCookieButton.click()
 
     def _resolveTest(self):
+        self._tryInternalLogin()
         self._closeAcceptCookieModal()
 
         exists, startTestButton = self.driverWrapper.tryFindElement(constants.START_TEST_BUTTON_CSS_SELECTOR)
         if (exists):
-            startTestButton.click()
+            startTestButton.tryClick(5)
+
+        sleep(1)
 
         totalPoints = int(self.driverWrapper.findElement(".rqPoints .rqMCredits").text)
         points = int(self.driverWrapper.findElement(".rqPoints .rqECredits").text)
@@ -81,18 +100,21 @@ class Navigation:
             while(option is not None):
                 try:
                     option.click()
-                finally:
+                except Exception:
+                    break
+                else:
+                    sleep(2)
                     option = self._getNextTestOption()
 
             points += 10
-            sleep(2)
+            sleep(4)
 
     def _resolveFastTest(self):
         self._closeAcceptCookieModal()
 
         exists, startTestButton = self.driverWrapper.tryFindElement(constants.START_TEST_BUTTON_CSS_SELECTOR)
         if (exists):
-            startTestButton.click()        
+            startTestButton.tryClick(5)        
 
         totalPoints = int(self.driverWrapper.findElement(".rqPoints .rqMCredits").text)
         points = int(self.driverWrapper.findElement(".rqPoints .rqECredits").text)    
@@ -102,22 +124,30 @@ class Navigation:
         while(option is not None or totalPoints != points):
             try:
                 option.click()
+            except Exception:
+                break
             finally:
                 sleep(2)
                 points = int(self.driverWrapper.findElement(".rqPoints .rqMCredits").text)
                 option = self._getNextFastTestOption()
 
-
     def _getNextTestOption(self):
         elements = self.driverWrapper.findElements(constants.TEXT_EXTRA_OPTIONS_CSS_SELECTOR)
 
-        if (not elements):
+        if (not elements or self._areAllTestOptionsSuccess(elements)):
             return None
-        
+
         for element in elements:
             exists, x = element.tryFindElement(constants.TEXT_EXTRA_OPTION_SELECTED_CSS_SELECTOR)
             if (exists):
                 return element
+
+    def _areAllTestOptionsSuccess(self, options):
+        return list(filter(self._filterTestOptionsSuccess, options)).count == 5
+
+    def _filterTestOptionsSuccess(self, option):
+        exists, element = option.tryFindElement('img[data-bm="102"]')
+        return exists
             
     def _getNextFastTestOption(self):
         elements = self.driverWrapper.findElements("#currentQuestionContainer .rq_button")
@@ -146,7 +176,7 @@ class Navigation:
             randomNumber = random.randrange(1, 500)
             self._doBingSearch(randomNumber)
 
-            sleep(1)
+            sleep(8)
 
     def _tryLoginBing(self):
         self.driverWrapper.driver.get(constants.BING_URL)
@@ -217,5 +247,3 @@ class Navigation:
         cards = self._getCards()
 
         return list(filter(self._isUncheckedCard, cards))
-
-
