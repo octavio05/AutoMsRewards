@@ -39,7 +39,7 @@ class Wrapper:
         while (not doClick and tryClick < attempts):
             try:
                 self.driver.click()
-            except ElementNotInteractableException:
+            except Exception:
                 doClick = False
             else:
                 doClick = True
