@@ -1,16 +1,18 @@
 from time import sleep
 import random
 import constants
+from selenium.webdriver.common.keys import Keys
 
 class Navigation:
     def __init__(self, driverWrapper, username:str, password:str):
         if (driverWrapper is None):
             raise ValueError("driver must be provided")
-        
+
         self.username = username
         self.password = password
         self.driverWrapper = driverWrapper
         self.tabBase = driverWrapper.driver.current_window_handle
+        self.searchTerms = []
 
     def start(self):
         self.driverWrapper.driver.get(constants.REWARDS_URL)
@@ -38,7 +40,7 @@ class Navigation:
 
         noSaveSessionButton = self.driverWrapper.findElement(constants.NO_SAVE_SESSION_BUTTON_CSS_SELECTOR)
         noSaveSessionButton.click()   
-        
+
     def _tryInternalLogin(self):
         exists, loginButton = self.driverWrapper.tryFindElement('.signInOptions .identityOption a')
 
@@ -179,8 +181,8 @@ class Navigation:
         self._tryLoginBing()
 
         for x in range(0, 0 if pointsToComplete == 0 else int(pointsToComplete/3) + 1):
-            randomNumber = random.randrange(1, 500)
-            self._doBingSearch(randomNumber)
+            text = self._getRandomSearchTerm()
+            self._doBingSearch(text)
 
             sleep(8)
 
@@ -194,7 +196,11 @@ class Navigation:
             bingLoginButton.click()   
 
     def _doBingSearch(self, value:str):
-        self.driverWrapper.driver.get(constants.BING_SEARCH_URL.format(value))    
+        inputText = self.driverWrapper.findElement('#sb_form_q')
+
+        inputText.clear()
+        inputText.sendKeys(value)
+        inputText.sendKeys(Keys.RETURN)
 
     def _getBrowserPointsToComplete(self):
         exists, showDailyPointsLink = self.driverWrapper.tryFindElement(constants.SHOW_DAILY_POINTS_LINK_CSS_SELECTOR)
@@ -233,8 +239,6 @@ class Navigation:
             
         return False  
 
-        # return 'test a la velocidad de la luz' in card.text.lower()
-
     def _tryGetNewTabId(self):
         tabs = list(filter(lambda x: (x != self.tabBase), self.driverWrapper.driver.window_handles))
 
@@ -262,3 +266,12 @@ class Navigation:
         cards = self._getCards()
 
         return list(filter(self._isUncheckedCard, cards))
+
+    def _getRandomSearchTerm(self):
+        if (not self.searchTerms):
+            self.searchTerms = constants.SEARCH_TERMS.copy()
+
+        randomTerm = random.choice(self.searchTerms)
+        self.searchTerms.remove(randomTerm)
+
+        return randomTerm

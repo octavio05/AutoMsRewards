@@ -42,7 +42,7 @@ nav.checkCards()
 print("Cards checked!")
 # logging.info("Cards checked!")
 
-#nav.dailySearch()
+nav.dailySearch()
 
 print("Do daily search!")
 # logging.info("Do daily search!")

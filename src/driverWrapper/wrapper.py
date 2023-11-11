@@ -50,3 +50,6 @@ class Wrapper:
     
     def sendKeys(self, text:str):
         self.driver.send_keys(text)
+
+    def clear(self):
+        self.driver.clear()
