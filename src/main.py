@@ -1,5 +1,6 @@
 import logging
-from appSecrets import MAIL, PASSWORD, DEBUG_USER_DATA_DIR
+from dotenv import load_dotenv
+from os import getenv
 from selenium import webdriver
 from msrewards.navigation import Navigation
 from driverWrapper.wrapper import Wrapper
@@ -19,8 +20,10 @@ driver_options.add_argument("--no-sandbox")
 driver_options.add_argument("--disable-dev-shm-usage")
 driver_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-if (DEBUG_USER_DATA_DIR):
-    driver_options.add_argument(f"user-data-dir={DEBUG_USER_DATA_DIR}")
+load_dotenv()
+
+if (getenv('DEBUG_USER_DATA_DIR')):
+    driver_options.add_argument(f"user-data-dir={getenv('DEBUG_USER_DATA_DIR')}")
 
 driver = webdriver.Edge(options=driver_options)
 
@@ -28,7 +31,7 @@ driver = webdriver.Edge(options=driver_options)
 print("Webdriver created!")
 
 driverWrapper = Wrapper(driver)
-nav = Navigation(driverWrapper, MAIL, PASSWORD)
+nav = Navigation(driverWrapper, getenv('MAIL'), getenv('PASSWORD'))
 
 nav.start()
 
