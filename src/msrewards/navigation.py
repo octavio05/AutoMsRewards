@@ -91,8 +91,8 @@ class Navigation:
 
         sleep(1)
 
-        totalPoints = int(self.driverWrapper.findElement(".rqPoints .rqMCredits").text)
-        points = int(self.driverWrapper.findElement(".rqPoints .rqECredits").text)
+        totalPoints = int(self.driverWrapper.findElement(constants.TEST_TOTAL_POINTS_CSS_SELECTOR).text)
+        points = int(self.driverWrapper.findElement(constants.TEST_POINTS_CSS_SELECTOR).text)
 
         option = self._getNextTestOption()
 
@@ -116,8 +116,11 @@ class Navigation:
         if (exists):
             startTestButton.tryClick(5)        
 
-        totalPoints = int(self.driverWrapper.findElement(".rqPoints .rqMCredits").text)
-        points = int(self.driverWrapper.findElement(".rqPoints .rqECredits").text)    
+        totalPoints = int(self.driverWrapper.findElement(constants.TEST_TOTAL_POINTS_CSS_SELECTOR).text)
+        points = totalPoints
+        exists, pointsElement = self.driverWrapper.tryFindElement(constants.TEST_POINTS_CSS_SELECTOR)
+        if (exists):
+            points = int(pointsElement.text)
 
         option = self._getNextFastTestOption()  
 
@@ -128,7 +131,10 @@ class Navigation:
                 break
             finally:
                 sleep(2)
-                points = int(self.driverWrapper.findElement(".rqPoints .rqMCredits").text)
+                newPoints = int(self.driverWrapper.findElement(constants.TEST_POINTS_CSS_SELECTOR).text)
+                if (points < newPoints):
+                    sleep(2)
+                points = newPoints
                 option = self._getNextFastTestOption()
 
     def _getNextTestOption(self):
@@ -218,7 +224,16 @@ class Navigation:
         return False   
     
     def _isFastTestCard(self, card):
-        return 'test a la velocidad de la luz' in card.text.lower()
+        cardText = card.text.lower()
+        textToFind = ['test a la velocidad de la luz', 'preguntas sobre el navegador', 'desafío sobre rewards', 'cuestionario sobre microsoft']
+
+        for text in textToFind:
+            if (text in cardText):
+                return True
+            
+        return False  
+
+        # return 'test a la velocidad de la luz' in card.text.lower()
 
     def _tryGetNewTabId(self):
         tabs = list(filter(lambda x: (x != self.tabBase), self.driverWrapper.driver.window_handles))
