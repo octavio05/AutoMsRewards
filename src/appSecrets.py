@@ -1,2 +1,3 @@
 MAIL = ""
 PASSWORD = ""
+DEBUG_USER_DATA_DIR = ""

@@ -1,6 +1,5 @@
 import logging
-from secrets import MAIL, PASSWORD
-from time import sleep
+from appSecrets import MAIL, PASSWORD, DEBUG_USER_DATA_DIR
 from selenium import webdriver
 from msrewards.navigation import Navigation
 from driverWrapper.wrapper import Wrapper
@@ -20,18 +19,20 @@ driver_options.add_argument("--no-sandbox")
 driver_options.add_argument("--disable-dev-shm-usage")
 driver_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
+if (DEBUG_USER_DATA_DIR):
+    driver_options.add_argument(f"user-data-dir={DEBUG_USER_DATA_DIR}")
+
 driver = webdriver.Edge(options=driver_options)
-#driver = webdriver.Chrome()
 
 # logging.info("Webdriver created!")
 print("Webdriver created!")
 
-# testManager = TestManager()
-
 driverWrapper = Wrapper(driver)
-nav = Navigation(driverWrapper)
+nav = Navigation(driverWrapper, MAIL, PASSWORD)
 
-nav.login(MAIL, PASSWORD)
+nav.start()
+
+nav.login()
 
 print("Logued!")
 # logging.info("Logued!")
@@ -41,7 +42,7 @@ nav.checkCards()
 print("Cards checked!")
 # logging.info("Cards checked!")
 
-nav.dailySearch()
+#nav.dailySearch()
 
 print("Do daily search!")
 # logging.info("Do daily search!")
