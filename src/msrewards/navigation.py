@@ -2,27 +2,34 @@ from time import sleep
 import random
 import constants
 from selenium.webdriver.common.keys import Keys
+from driverWrapper.wrapper import Wrapper
+
+from shared.appLogging import AppLogging
 
 class Navigation:
-    def __init__(self, driverWrapper, username:str, password:str):
+    def __init__(self, driverWrapper: Wrapper, username:str, password:str, logging: AppLogging) -> None:
         if (driverWrapper is None):
-            raise ValueError("driver must be provided")
+            raise ValueError('driver must be provided')
+        
+        if (logging is None):
+            raise ValueError('logging must be provided')
 
         self.username = username
         self.password = password
         self.driverWrapper = driverWrapper
+        self.logging = logging
         self.tabBase = driverWrapper.driver.current_window_handle
         self.searchTerms = []
 
-    def start(self):
+    def start(self) -> None:
         self.driverWrapper.get(constants.REWARDS_URL)
 
-    def login(self):
+    def login(self) -> None:
         exists, loginInput = self.driverWrapper.tryFindElement(constants.LOGIN_INPUT_CSS_SELECTOR)
         if (exists):
             loginInput.sendKeys(self.username)
         else:
-            print("already loged in")
+            self.logging.info('Already login')
             return
 
         submitButton = self.driverWrapper.findElement(constants.SUBMIT_BUTTON_CSS_SELECTOR)
@@ -41,6 +48,8 @@ class Navigation:
         noSaveSessionButton = self.driverWrapper.findElement(constants.NO_SAVE_SESSION_BUTTON_CSS_SELECTOR)
         noSaveSessionButton.click()   
 
+        self.logging.info('Login success')
+
     def _tryInternalLogin(self):
         exists, loginButton = self.driverWrapper.tryFindElement('.signInOptions .identityOption a')
 
@@ -53,11 +62,14 @@ class Navigation:
 
         self.login()
 
-    def checkCards(self):
+    def checkCards(self) -> None:
         uncheckedCards = self._getUncheckedCards()
         if (not uncheckedCards):
+            self.logging.info('All cards are checked')
             return
         
+        self.logging.info(f'Find {len(uncheckedCards)} cards to check')
+
         for card in uncheckedCards:
             card.click()
             sleep(constants.PREVENT_WAIT_SECONDS)
@@ -168,7 +180,7 @@ class Navigation:
             if (not exists):
                 return element
 
-    def dailySearch(self):
+    def dailySearch(self) -> None:
         try:
             pointsToComplete = self._getBrowserPointsToComplete()
         except AttributeError:
@@ -176,8 +188,11 @@ class Navigation:
             pointsToComplete = 60
 
         if (pointsToComplete == 0):
+            self.logging.info('All daily search points are completed')
             return
         
+        self.logging.info(f'{pointsToComplete} daily search points to complete')
+
         self._tryLoginBing()
 
         for x in range(0, 0 if pointsToComplete == 0 else int(pointsToComplete/3) + 1):
@@ -261,8 +276,7 @@ class Navigation:
 
         return exists
 
-    def _getUncheckedCards(self):
-        # return self.driverWrapper.findElements(constants.UNCHECKED_CARDS_CSS_SELECTOR)
+    def _getUncheckedCards(self) -> list:
         cards = self._getCards()
 
         return list(filter(self._isUncheckedCard, cards))

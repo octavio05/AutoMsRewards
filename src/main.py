@@ -1,18 +1,19 @@
-import logging
 from dotenv import load_dotenv
 from os import getenv
 from selenium import webdriver
 from msrewards.navigation import Navigation
 from driverWrapper.wrapper import Wrapper
+from shared.appLogging import AppLogging
 
 # mobile_emulation = { "deviceName": "Pixel 5"}
 # driver_options = webdriver.EdgeOptions()
 # driver_options.add_experimental_option("mobileEmulation", mobile_emulation)
 
 # driver = webdriver.Edge(driver_options)
-print("Enter app!")
+logging = AppLogging()
 
-# logging.basicConfig(filename="app.log", encoding="utf-8", level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.info('Process start')
+print('Process start')
 
 driver_options = webdriver.EdgeOptions()
 driver_options.add_argument("--headless")
@@ -27,28 +28,20 @@ if (getenv('DEBUG_USER_DATA_DIR')):
 
 driver = webdriver.Edge(options=driver_options)
 
-# logging.info("Webdriver created!")
-print("Webdriver created!")
+logging.info('WebDriver created!')
 
-driverWrapper = Wrapper(driver)
-nav = Navigation(driverWrapper, getenv('MAIL'), getenv('PASSWORD'))
+driverWrapper = Wrapper(driver, logging)
+nav = Navigation(driverWrapper, getenv('MAIL'), getenv('PASSWORD'), logging)
+
+logging.info('Navigation start')
 
 nav.start()
 
 nav.login()
 
-print("Logued!")
-# logging.info("Logued!")
-
 nav.checkCards()
-
-print("Cards checked!")
-# logging.info("Cards checked!")
 
 nav.dailySearch()
 
-print("Do daily search!")
-# logging.info("Do daily search!")
-
-print("End of proccess")
-# logging.info("End of proccess")
+logging.info('Process end')
+print('Process end')
