@@ -1,5 +1,5 @@
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
+from selenium.common.exceptions import NoSuchElementException
 
 class Wrapper:
     def __init__(self, driver):
@@ -53,3 +53,6 @@ class Wrapper:
 
     def clear(self):
         self.driver.clear()
+
+    def get(self, url:str):
+        self.driver.get(url)

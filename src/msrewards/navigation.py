@@ -15,7 +15,7 @@ class Navigation:
         self.searchTerms = []
 
     def start(self):
-        self.driverWrapper.driver.get(constants.REWARDS_URL)
+        self.driverWrapper.get(constants.REWARDS_URL)
 
     def login(self):
         exists, loginInput = self.driverWrapper.tryFindElement(constants.LOGIN_INPUT_CSS_SELECTOR)
@@ -187,7 +187,7 @@ class Navigation:
             sleep(8)
 
     def _tryLoginBing(self):
-        self.driverWrapper.driver.get(constants.BING_URL)
+        self.driverWrapper.get(constants.BING_URL)
         exists, bingLoginButton = self.driverWrapper.tryFindElement(constants.BING_LOGIN_BUTTON_CSS_SELECTOR)
         if (exists):
             sleep(1)
